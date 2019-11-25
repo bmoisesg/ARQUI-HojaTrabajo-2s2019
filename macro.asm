@@ -1,22 +1,20 @@
-;-------------------------------------------print
+
 print macro cadena 
 	LOCAL ETIQUETA 
 	ETIQUETA: 
 		MOV ah,09h 
 		MOV dx,@data 
-		;MOV dx, SEG cadena
 		MOV ds,dx 
 		MOV dx, offset cadena 
 		int 21h
 endm
-;------------------------------------------getruta
+
 getRuta macro buffer
 	LOCAL INICIO,FIN
 		xor si,si
 	INICIO:
-		
 		getChar
-		cmp al,0dh
+		cmp al,0dh ;[enter]
 		je FIN
 		mov buffer[si],al
 		inc si
@@ -24,28 +22,16 @@ getRuta macro buffer
 	FIN:
 		mov buffer[si],00h
 endm
-;-----------------------------------------getTexto
-getTexto macro buffer
-	LOCAL INICIO,FIN
-	xor si,si
-	INICIO:
-		getChar	
-		
-		
-		cmp al,0dh
-		je FIN
-		mov buffer[si],al
-		inc si
-		jmp INICIO
-	FIN:
-		mov buffer[si],'$'
-endm
-;-------------------------------------------------
+
 getChar macro
 	mov ah,0dh
 	int 21h
 	mov ah,01h
 	int 21h
+endm
+
+println macro
+	print  salto
 endm
 
 ;=========================== FICHEROS ===================
@@ -85,15 +71,22 @@ escribirF macro handle, numBytes, buffer
 	jc ErrorEscribir
 endm
 
+cerrarF macro handle
+	mov ah,3eh
+	mov bx,handle
+	int 21h
+	cmp ax,01h
+	jc ErrorCerrarArchivo
+endm
 
 ;-----------------------------------------------
-contarElementos macro arreglo   ;en di te devuelve el numero de elementos del arreglo en di
+toMinuscula macro arreglo   ;en di te devuelve el numero de elementos del arreglo en di
 	
 	LOCAL continuar, finalizar
     xor di,di
     continuar:
 		
-        cmp arreglo[di],24h;'$'
+        cmp arreglo[di],'$'
         je finalizar
         
 		cmp arreglo[di],41h
@@ -118,40 +111,9 @@ contarElementos macro arreglo   ;en di te devuelve el numero de elementos del ar
         dec di
 endm
 
-contarElementos macro arreglo   ;en di te devuelve el numero de elementos del arreglo en di
+toMayuscula macro arreglo   ;en di te devuelve el numero de elementos del arreglo en di
 	
-	LOCAL continuar, finalizar
-    xor di,di
-    continuar:
-		
-        cmp arreglo[di],24h;'$'
-        je finalizar
-        
-		cmp arreglo[di],41h
-		jge MAYOR
-		jmp EXIT
-
-		MAYOR:
-			cmp arreglo[di],5ah
-			jle MENOR
-			jmp EXIT
-
-		MENOR:
-			mov al,arreglo[di]
-			mov ah, 20h
-			add ah,al
-			mov arreglo[di],ah
-			jmp EXIT
-		EXIT:
-		inc di
-        jmp continuar
-    finalizar: 
-        dec di
-endm
-
-pasarmayusculas macro arreglo   ;en di te devuelve el numero de elementos del arreglo en di
-	
-	LOCAL continuar, finalizar,MAYOR,MENOR,EXITT
+	LOCAL continuar, finalizar,MAYOR,MENOR,EXIT
     xor di,di
     continuar:
 		
@@ -160,22 +122,33 @@ pasarmayusculas macro arreglo   ;en di te devuelve el numero de elementos del ar
         
 		cmp arreglo[di],61h
 		jge MAYOR
-		jmp EXITT
+		jmp EXIT
 
 		MAYOR:
 			cmp arreglo[di],7ah
 			jle MENOR
-			jmp EXITT
+			jmp EXIT
 
 		MENOR:
 			mov al,arreglo[di]
 			mov ah, 20h
 			sub al,ah
 			mov arreglo[di],al
-			jmp EXITT	
-		EXITT:
+			jmp EXIT	
+		EXIT:
 		inc di
         jmp continuar
     finalizar: 
         dec di
+endm
+
+contarArray macro arreglo
+	LOCAL regresar,terminar
+	xor si,si
+	regresar:
+		cmp arreglo[si],'$'
+		je terminar
+		inc si
+		jmp regresar
+	terminar:
 endm
